@@ -36,47 +36,55 @@ db = SQLAlchemy(app)
 import requests
   
 
-#class UploadSong():
-#    name = request.json['name_of_audio']
-#    duration = request.json['duration']
-#    uploaded_time = request.json['uploaded_time']
+class UploadSong:
+    def __init__(self, request):
+        self.name = request.json['name']
+        self.duration = request.json['duration']
+    #uploaded_time = request.json['uploaded_time']
 
-#class UploadPodcast(UploadSong):
-#    host = request.json['host']
-#    participants = request.json['participants']
+class UploadPodcast(UploadSong):
+    def __init__(self, request):
+        self.host = request.json['host']
+        self.participants = request.json['participants']
+        super().__init__(self)
 
 
-#class UploadAudiobook(UploadSong):
-#    author = request.json['author']
-#    narrator = request.json['narrator']
+class UploadAudiobook(UploadSong):
+    def __init__(self, request):
+        self.author = request.json['author']
+        self.narrator = request.json['narrator']
 
 
 @app.route('/create/<audioFileType>', methods=['POST'])
 def create(audioFileType):
 
     if audioFileType == "song":
-        upload_song = UploadSong()
-        name = request.json['name']
-        duration = request.json['duration']
-        uploaded_time = datetime.datetime.now()
-
+        upload_song = UploadSong(request)
         song = Song(name=upload_song.name, duration=upload_song.duration)
-        session.add(song)
-        session.commit()
-
+        db.session.add(song)
+        
     if audioFileType == "podcast":
-        file = UploadPodcast()
+        upload_podcast = UploadPodcast(request)
+        podcast = Podcast(name=upload_podcast.name, duration=upload_podcast.duration, host=upload_podcast.host, participants=upload_podcast.participants)
+        db.session.add(podcast)
+
     if audioFileType == "audiobook":
         file = UploadAudiobook()
-
+    db.session.commit()
 @app.route('/delete/<audioFileType>/<audioFileID>', methods=['DELETE'])
 def delete(audioFileType, audioFileID):
     if audioFileType == "song":
-        song = Song.query.get(audioFileID).delete()
-        #song.delete()
+        song = db.session.query(Song).filter_by(id=audioFileID).one()
         db.session.delete(song)
-        session.commit()
-        #db.session.delete(the_song)
+        db.session.commit()
+    if audioFileType == "podcast":
+        podcast = db.session.query(Podcast).filter_by(id=audioFileID).one()
+        db.session.delete(podcast)
+        db.session.commit()
+    if audioFileType == "audiobook":
+        audiobook = db.session.query(Audiobook).filter_by(id=audioFileID).one()
+        db.session.delete(audiobook)
+        db.session.commit()
         
     return {"deleted": "deleted"}
     #if audioFileType == "song":
