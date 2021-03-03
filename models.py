@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy import PickleType
 from flask_marshmallow import Marshmallow
+import datetime
 app =  Flask(__name__)
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
@@ -19,8 +20,7 @@ class Audio():
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     duration = db.Column(db.Integer, nullable=False)
-    uploaded_time = db.Column(db.Time, nullable=False)
-    audio_file = db.Column(db.String(20), nullable=False)
+    uploaded_time = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
 
 class Song(db.Model, Audio):
     __tablename__ = 'songs'

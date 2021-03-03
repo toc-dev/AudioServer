@@ -6,6 +6,7 @@ import secrets
 import json
 import os
 import sqlite3
+import datetime
 from flask import Flask, request, jsonify, make_response, Response
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
@@ -33,12 +34,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///audio.db'
 db = SQLAlchemy(app)
 
 import requests
-
-class AudioForm(FlaskForm):
-    audio = FileField(validators=[FileAllowed(['mp3', 'aa', 'aax', 'aac'])])
-    #submit =  SubmitField('Submit')
-    #myFile = secure_filename(form.fileName.file.filename)
-    #form.fileName.file.save(PATH+myFile)
   
 
 #class UploadSong():
@@ -56,48 +51,51 @@ class AudioForm(FlaskForm):
 #    narrator = request.json['narrator']
 
 
-def save_audio(form_audio):
-    random_hex = secrets.token_hex(8)
-    _, f_ext = os.path.splitext(form_audio.filename)
-    audio_fn = random_hex + f_ext
-    audio_path = os.path.join(app.root_path, 'static/audiofiles', audio_fn)
-    form_audio.save(audio_path)
-
-    return audio_fn
-
 @app.route('/create/<audioFileType>', methods=['POST'])
 def create(audioFileType):
-    form = AudioForm()
-    #body = request.get_json(force=True)
-    #if form.validate_on_submit():
-    #    if form.audio.data:
-    #audio_file = save_audio(form.audio.data)
+
     if audioFileType == "song":
-        #file = UploadSong()
-        audio_file = request.form.get('audio_file')
-        #if not audio_file:
-        #    return 'no pic uploaded', 400
+        upload_song = UploadSong()
         name = request.json['name']
         duration = request.json['duration']
-        uploaded_time = request.json['uploaded_time']
-        song = Song(name=name, duration=duration, uploaded_time=uploaded_time)
+        uploaded_time = datetime.datetime.now()
+
+        song = Song(name=upload_song.name, duration=upload_song.duration)
         session.add(song)
         session.commit()
+
     if audioFileType == "podcast":
         file = UploadPodcast()
     if audioFileType == "audiobook":
         file = UploadAudiobook()
 
 @app.route('/delete/<audioFileType>/<audioFileID>', methods=['DELETE'])
-def delete(id):
-    pass
+def delete(audioFileType, audioFileID):
+    if audioFileType == "song":
+        song = Song.query.get(audioFileID).delete()
+        #song.delete()
+        db.session.delete(song)
+        session.commit()
+        #db.session.delete(the_song)
+        
+    return {"deleted": "deleted"}
+    #if audioFileType == "song":
+    #pass
 
 @app.route('/update/<audioFileType>/<audioFileID>', methods=['PUT'])
-def update(id):
+def update(audioFileType, audioFileID):
+    if audioFileType == "song":
+        song = Song.query.get(audioFileID)
+        song.name = name
+        song.duration = duration
+
     pass
 
 @app.route('/<audioFileType>/<audioFileID>', methods=['GET'])
-def getAPI(id):
+def getAPI(audioFileType, audioFileID):
+    if audioFileType == "song":
+        song = Song.query.get(audioFileID)
+        return jsonify({"name":song.name, "duration":song.duration, "uploaded_time":song.uploaded_time})
     pass
 
 
