@@ -2,7 +2,6 @@
 This script runs the application using a development server.
 It contains the definition of routes and views for the application.
 """
-import secrets
 import json
 import os
 import sqlite3
@@ -67,12 +66,14 @@ def create(audioFileType):
         upload_song = UploadSong(request)
         song = Song(name=upload_song.name, duration=upload_song.duration)
         db.session.add(song)
+        db.session.commit()
         return song_schema.jsonify(song)
 
     if audioFileType == "podcast":
         upload_podcast = UploadPodcast(request)
         podcast = Podcast(name=upload_podcast.name, duration=upload_podcast.duration, host=upload_podcast.host, participants=upload_podcast.participants)
         db.session.add(podcast)
+        db.session.commit()
         return podcast_schema.jsonify(podcast)
 
     if audioFileType == "audiobook":
@@ -80,9 +81,10 @@ def create(audioFileType):
         audiobook = Audiobook(name=upload_audiobook.name, duration=upload_audiobook.duration, 
                     author=upload_audiobook.author, narrator=upload_audiobook.narrator)
         db.session.add(audiobook)
+        db.session.commit()
         return audiobook_schema.jsonify(audiobook)
 
-    db.session.commit()
+    
     return {"success!": "success"}
 @app.route('/delete/<audioFileType>/<audioFileID>', methods=['DELETE'])
 def delete(audioFileType, audioFileID):
@@ -114,6 +116,7 @@ def update(audioFileType, audioFileID):
         song.name = upload_song.name
         song.duration = upload_song.duration
         db.session.merge(song)
+        db.session.commit()
         return song_schema.jsonify(song)
 
     if audioFileType == "podcast":
@@ -124,6 +127,7 @@ def update(audioFileType, audioFileID):
         podcast.host = upload_podcast.host
         podcast.participants = upload_podcast.participants
         db.session.merge(podcast)
+        db.session.commit()
         return podcast_schema.jsonify(podcast)
 
     if audioFileType == "audiobook":
@@ -134,12 +138,13 @@ def update(audioFileType, audioFileID):
         audiobook.author = upload_audiobook.author
         audiobook.narrator = upload_audiobook.narrator
         db.session.merge(audiobook)
+        db.session.commit()
         return audiobook_schema.jsonify(audiobook)
-    db.session.commit()
-    return jsonify()
+    
+    
 
 @app.route('/<audioFileType>/<audioFileID>', methods=['GET'])
-def getAPI(audioFileType, audioFileID):
+def get_file(audioFileType, audioFileID):
     if audioFileType == "song":
         song = Song.query.get(audioFileID)
         return song_schema.jsonify(song)
@@ -151,9 +156,21 @@ def getAPI(audioFileType, audioFileID):
     if audioFileType == "audiobook":
         audiobook = Audiobook.query.get(audioFileID)
         return audiobook_schema.jsonify(audiobook)
-    return jsonify({"name":song.name, "duration":song.duration, "uploaded_time":song.uploaded_time})
     
+    
+@app.route('/<audioFileType>/', methods=['GET'])
+def get_all_files(audioFileType):
+    if audioFileType == "song":
+        song = Song.query.all()
+        return songs_schema.jsonify(song)
 
+    if audioFileType == "podcast":
+        podcast = Podcast.query.all()
+        return podcasts_schema.jsonify(podcast)
+
+    if audioFileType == "audiobook":
+        audiobook = Audiobook.query.all()
+        return audiobooks_schema.jsonify(audiobook)
 
 if __name__ == '__main__':
     import os
