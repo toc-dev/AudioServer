@@ -25,14 +25,25 @@ class Audio():
 class Song(db.Model, Audio):
     __tablename__ = 'songs'
 
+class SongSchema(ma.Schema):
+    class Meta:
+        fields = ("id", "name", "duration", "uploaded_time")
+
 class Podcast(db.Model, Audio):
     __tablename__ = 'podcasts'
     host = db.Column(db.String(100), nullable=False)
     participants = db.Column(db.String(20))
+
+class PodcastSchema(ma.Schema):
+    class Meta:
+        fields = ("id", "name", "duration", "uploaded_time", "host", "participants")
 
 class Audiobook(db.Model, Audio):
     __tablename__ = 'audiobook'
     author = db.Column(db.String(100), unique=True, nullable=False)
     narrator = db.Column(db.String(100), unique=True, nullable=False)
 
+class AudiobookSchema(ma.Schema):
+    class Meta:
+        fields = ("id", "name", "duration", "uploaded_time", "author", "narrator")
     #db.MutableList.as_mutable(PickleType), default=[])
